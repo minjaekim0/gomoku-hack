@@ -2,6 +2,7 @@ from typing import List, Union
 from abc import abstractmethod
 import numpy as np
 from copy import copy
+from collections import defaultdict
 from gomoku_hack.util import array_nan_equal
 
 
@@ -23,15 +24,14 @@ class Two4Checker(BaseChecker):
         r = 7 - y
         c = x + 7
         
-        if self.board_calc[r][c] == 1:
+        if self.board_calc[r][c] in (0, 1):
             return False
-
-        result_h = self._check_4_horizontal(self.board_calc, r, c)
-        result_v = self._check_4_vertical(self.board_calc, r, c)
-        result_dd = self._check_4_diagonal_downward(self.board_calc, r, c)
-        result_du = self._check_4_diagonal_upward(self.board_calc, r, c)
         
-        if result_h + result_v + result_dd + result_du >= 2:
+        results = dict()
+        for dir_ in ["horizontal", "vertical", "diagonal_downward", "diagonal_upward"]:
+            results[dir_] = getattr(self, f"_check_4_{dir_}")(self.board_calc, r, c)
+        
+        if sum(results.values()) >= 2:
             return True
         else:
             return False
@@ -106,20 +106,15 @@ class TwoOpen3Checker(BaseChecker):
         r = 7 - y
         c = x + 7
         
-        if self.board_calc[r][c] == 1:
+        if self.board_calc[r][c] in (0, 1):
             return False
 
-        result_spaced_h = self._check_open3_spaced_horizontal(self.board_calc, r, c)
-        result_spaced_v = self._check_open3_spaced_vertical(self.board_calc, r, c)
-        result_spaced_dd = self._check_open3_spaced_diagonal_downward(self.board_calc, r, c)
-        result_spaced_du = self._check_open3_spaced_diagonal_upward(self.board_calc, r, c)
-        result_continuous_h = self._check_open3_continuous_horizontal(self.board_calc, r, c)
-        result_continuous_v = self._check_open3_continuous_vertical(self.board_calc, r, c)
-        result_continuous_dd = self._check_open3_continuous_diagonal_downward(self.board_calc, r, c)
-        result_continuous_du = self._check_open3_continuous_diagonal_upward(self.board_calc, r, c)
-                
-        if result_spaced_h + result_spaced_v + result_spaced_dd + result_spaced_du + \
-            result_continuous_h + result_continuous_v + result_continuous_dd + result_continuous_du >= 2:
+        results = defaultdict(dict)
+        for open3_type in ["spaced", "continuous"]:
+            for dir_ in ["horizontal", "vertical", "diagonal_downward", "diagonal_upward"]:
+                results[open3_type][dir_] = getattr(self, f"_check_open3_{open3_type}_{dir_}")(self.board_calc, r, c)
+        
+        if sum([sum(d.values()) for d in results.values()]) >= 2:
             return True
         else:
             return False

@@ -4,7 +4,7 @@ from gomoku_hack.board import Board
 from gomoku_hack.renju import Two4Checker, TwoOpen3Checker
 
 
-def two4():
+def two_4():
     board = Board()
     
     stones = [
@@ -42,7 +42,7 @@ def two4():
             if t4c.check(x, y):
                 print(x, y)
     
-    print(1)
+    return
 
 
 def two_open3():
@@ -62,6 +62,7 @@ def two_open3():
         [-7, -5, True], 
         [-6, -7, True], 
         [-4, -7, True], 
+        [2, 1, False], 
     ]
     for s in stones:
         board.update(*s)
@@ -74,8 +75,9 @@ def two_open3():
             if t3c.check(x, y):
                 print(x, y)
     
-    print(1)
+    return
     
 
 if __name__ == "__main__":
+    # two_4()
     two_open3()
