@@ -2,6 +2,7 @@ from typing import List, Union
 from abc import abstractmethod
 import numpy as np
 from copy import copy
+from gomoku_hack.util import array_nan_equal
 
 
 class BaseChecker:
@@ -102,7 +103,104 @@ class TwoOpen3Checker(BaseChecker):
         super().__init__(board_calc)
 
     def check(self, x: int, y: int) -> bool:
-        return "no"
+        r = 7 - y
+        c = x + 7
+        
+        if self.board_calc[r][c] == 1:
+            return False
+
+        result_spaced_h = self._check_open3_spaced_horizontal(self.board_calc, r, c)
+        result_spaced_v = self._check_open3_spaced_vertical(self.board_calc, r, c)
+        result_spaced_dd = self._check_open3_spaced_diagonal_downward(self.board_calc, r, c)
+        result_spaced_du = self._check_open3_spaced_diagonal_upward(self.board_calc, r, c)
+        result_continuous_h = self._check_open3_continuous_horizontal(self.board_calc, r, c)
+        result_continuous_v = self._check_open3_continuous_vertical(self.board_calc, r, c)
+        result_continuous_dd = self._check_open3_continuous_diagonal_downward(self.board_calc, r, c)
+        result_continuous_du = self._check_open3_continuous_diagonal_upward(self.board_calc, r, c)
+                
+        if result_spaced_h + result_spaced_v + result_spaced_dd + result_spaced_du + \
+            result_continuous_h + result_continuous_v + result_continuous_dd + result_continuous_du >= 2:
+            return True
+        else:
+            return False
+
+    def _check_open3_spaced_horizontal(self, board_calc, r, c) -> bool:
+        board_copy = copy(board_calc)
+        board_copy[r][c] = 1
+        left_bound = max(0, c - 4)
+        right_bound = min(self.board_len - 6, c - 1)
+        
+        for b in range(left_bound, right_bound + 1):
+            subject = board_copy[r, b:b+6]
+            
+            if array_nan_equal(subject, [np.nan, 1, np.nan, 1, 1, np.nan]) or \
+                array_nan_equal(subject, [np.nan, 1, 1, np.nan, 1, np.nan]):
+                return True
+        return False
+    
+    def _check_open3_spaced_vertical(self, board_calc, r, c) -> bool:
+        transposed = board_calc.T
+        return self._check_open3_spaced_horizontal(transposed, c, r)
+    
+    def _check_open3_spaced_diagonal_downward(self, board_calc, r, c) -> bool:
+        board_copy = copy(board_calc)
+        board_copy[r][c] = 1
+        upperleft_available = min(r, c, 4)
+        lowerright_available = min(self.board_len - r - 1, self.board_len - c - 1, 4)
+        left_bound = c - upperleft_available
+        upper_bound = r - upperleft_available
+        right_bound = c + lowerright_available - 5
+        lower_bound = r + lowerright_available - 5
+        
+        for b1, b2 in zip(range(upper_bound, lower_bound + 1), range(left_bound, right_bound + 1)):
+            subject = board_copy[b1:b1+6, b2:b2+6].diagonal()
+            
+            if array_nan_equal(subject, [np.nan, 1, np.nan, 1, 1, np.nan]) or \
+                array_nan_equal(subject, [np.nan, 1, 1, np.nan, 1, np.nan]):
+                return True
+        return False
+    
+    def _check_open3_spaced_diagonal_upward(self, board_calc, r, c) -> bool:
+        flipped = np.flipud(board_calc)
+        return self._check_open3_spaced_diagonal_downward(flipped, self.board_len - r - 1, c)
+
+    def _check_open3_continuous_horizontal(self, board_calc, r, c) -> bool:
+        board_copy = copy(board_calc)
+        board_copy[r][c] = 1
+        left_bound = max(0, c - 3)
+        right_bound = min(self.board_len - 5, c - 1)
+        
+        for b in range(left_bound, right_bound + 1):
+            subject = board_copy[r, b:b+5]
+            
+            if array_nan_equal(subject, [np.nan, 1, 1, 1, np.nan]):
+                return True
+        return False
+    
+    def _check_open3_continuous_vertical(self, board_calc, r, c) -> bool:
+        transposed = board_calc.T
+        return self._check_open3_continuous_horizontal(transposed, c, r)
+    
+    def _check_open3_continuous_diagonal_downward(self, board_calc, r, c) -> bool:
+        board_copy = copy(board_calc)
+        board_copy[r][c] = 1
+        upperleft_available = min(r, c, 3)
+        lowerright_available = min(self.board_len - r - 1, self.board_len - c - 1, 3)
+        left_bound = c - upperleft_available
+        upper_bound = r - upperleft_available
+        right_bound = c + lowerright_available - 4
+        lower_bound = r + lowerright_available - 4
+        
+        for b1, b2 in zip(range(upper_bound, lower_bound + 1), range(left_bound, right_bound + 1)):
+            subject = board_copy[b1:b1+5, b2:b2+5].diagonal()
+            
+            if array_nan_equal(subject, [np.nan, 1, 1, 1, np.nan]):
+                return True
+        return False
+    
+    def _check_open3_continuous_diagonal_upward(self, board_calc, r, c) -> bool:
+        flipped = np.flipud(board_calc)
+        return self._check_open3_continuous_diagonal_downward(flipped, self.board_len - r - 1, c)
 
 
 class MoreThan6Checker(BaseChecker):
