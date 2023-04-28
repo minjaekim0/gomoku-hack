@@ -1,7 +1,7 @@
 import sys, os
 sys.path.append(os.path.abspath("."))
 from gomoku_hack.board import Board
-from gomoku_hack.renju import Two4Checker, TwoOpen3Checker
+from gomoku_hack.renju import Two4Checker, TwoOpen3Checker, MoreThan6Checker
 
 
 def two_4():
@@ -76,8 +76,44 @@ def two_open3():
                 print(x, y)
     
     return
+
+
+def more_than_6():
+    board = Board()
     
+    stones = [
+        [1, 0, True], 
+        [2, 1, True], 
+        [4, 3, True], 
+        [5, 4, True], 
+        [6, 5, True], 
+        [2, 0, True], 
+        [-1, 0, True], 
+        [-2, 0, True], 
+        [-3, 0, True], 
+        [-4, 0, True], 
+        [-5, 0, True], 
+        [2, -1, True], 
+        [2, -2, True], 
+        [2, -3, True], 
+        [2, -4, False], 
+    ]
+    for s in stones:
+        board.update(*s)
+    
+    board.show()
+    
+    m6c = MoreThan6Checker(board.board_calc)
+    for x in range(-7, 8):
+        for y in range(-7, 8):
+            if m6c.check(x, y):
+                print(x, y)
+    
+    return
+
 
 if __name__ == "__main__":
     # two_4()
-    two_open3()
+    # two_open3()
+    more_than_6()
+    

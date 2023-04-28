@@ -203,4 +203,46 @@ class MoreThan6Checker(BaseChecker):
         super().__init__(board_calc)
     
     def check(self, x: int, y: int) -> bool:
-        return "no"
+        r = 7 - y
+        c = x + 7
+        
+        if self.board_calc[r][c] in (0, 1):
+            return False
+        
+        results = dict()
+        for dir_ in ["horizontal", "vertical", "diagonal_downward", "diagonal_upward"]:
+            results[dir_] = getattr(self, f"_check_6_{dir_}")(self.board_calc, r, c)
+        
+        if sum(results.values()) >= 1:
+            return True
+        else:
+            return False
+
+    def _check_6_horizontal(self, board_calc, r, c) -> bool:
+        board_copy = copy(board_calc)
+        board_copy[r][c] = 1
+        left_bound = max(0, c - 5)
+        right_bound = min(self.board_len - 6, c)
+        for b in range(left_bound, right_bound + 1):
+            subject = board_copy[r, b:b+6]
+                        
+            if subject.sum() == 6:
+                return True
+        return False
+    
+    def _check_6_vertical(self, board_calc, r, c) -> bool:
+        transposed = board_calc.T
+        return self._check_6_horizontal(transposed, c, r)
+    
+    def _check_6_diagonal_downward(self, board_calc, r, c) -> bool:        
+        board_copy = copy(board_calc)
+        board_copy[r][c] = 1
+        
+        board_distorted = np.full((self.board_len * 2 - 1, self.board_len), np.nan)
+        for _c in range(self.board_len):
+            board_distorted[self.board_len-_c-1:self.board_len*2-_c-1, _c] = board_copy[:, _c]
+        return self._check_6_horizontal(board_distorted, r-c+14, c)
+    
+    def _check_6_diagonal_upward(self, board_calc, r, c) -> bool:
+        flipped = np.flipud(board_calc)
+        return self._check_6_diagonal_downward(flipped, self.board_len - r - 1, c)
