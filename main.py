@@ -1,5 +1,6 @@
 from gomoku_hack.board import Board
 
+
 def main():
     board = Board()
     
@@ -14,6 +15,7 @@ def main():
     board.show()
     
     print(1)
+
 
 if __name__ == "__main__":
     main()
