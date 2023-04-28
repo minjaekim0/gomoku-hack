@@ -97,6 +97,11 @@ def more_than_6():
         [2, -2, True], 
         [2, -3, True], 
         [2, -4, False], 
+        [-6, 7, True], 
+        [-5, 7, True], 
+        [-4, 7, True], 
+        [-3, 7, True], 
+        [-2, 7, True], 
     ]
     for s in stones:
         board.update(*s)

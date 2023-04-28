@@ -237,11 +237,19 @@ class MoreThan6Checker(BaseChecker):
     def _check_6_diagonal_downward(self, board_calc, r, c) -> bool:        
         board_copy = copy(board_calc)
         board_copy[r][c] = 1
+        upperleft_available = min(r, c, 5)
+        lowerright_available = min(self.board_len - r - 1, self.board_len - c - 1, 5)
+        left_bound = c - upperleft_available
+        upper_bound = r - upperleft_available
+        right_bound = c + lowerright_available - 5
+        lower_bound = r + lowerright_available - 5
         
-        board_distorted = np.full((self.board_len * 2 - 1, self.board_len), np.nan)
-        for _c in range(self.board_len):
-            board_distorted[self.board_len-_c-1:self.board_len*2-_c-1, _c] = board_copy[:, _c]
-        return self._check_6_horizontal(board_distorted, r-c+14, c)
+        for b1, b2 in zip(range(upper_bound, lower_bound + 1), range(left_bound, right_bound + 1)):
+            subject = board_copy[b1:b1+6, b2:b2+6].diagonal()
+            
+            if sum(subject) == 6:
+                return True
+        return False
     
     def _check_6_diagonal_upward(self, board_calc, r, c) -> bool:
         flipped = np.flipud(board_calc)
