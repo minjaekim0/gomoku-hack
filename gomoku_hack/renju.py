@@ -6,23 +6,14 @@ from collections import defaultdict
 from gomoku_hack.util import array_nan_equal
 
 
-class BaseChecker:
+class Two4Checker:
     def __init__(self, board_calc: List[List[Union[int, None]]]) -> None:
         self.board_len = 15
         self.board_calc = board_calc
     
-    @abstractmethod
-    def check(self, x: int, y: int) -> bool:
-        pass
-
-
-class Two4Checker(BaseChecker):
-    def __init__(self, board_calc: List[List[Union[int, None]]]) -> None:
-        super().__init__(board_calc)
-    
-    def check(self, x: int, y: int) -> bool:
-        r = 7 - y
-        c = x + 7
+    def check_two_4(self, x: int, y: int) -> bool:
+        r = self.board_len // 2 - y
+        c = x + self.board_len // 2
         
         if self.board_calc[r][c] in (0, 1):
             return False
@@ -98,13 +89,14 @@ class Two4Checker(BaseChecker):
         return self._check_4_diagonal_downward(flipped, self.board_len - r - 1, c)
 
 
-class TwoOpen3Checker(BaseChecker):
+class TwoOpen3Checker:
     def __init__(self, board_calc: List[List[Union[int, None]]]) -> None:
-        super().__init__(board_calc)
+        self.board_len = 15
+        self.board_calc = board_calc
 
-    def check(self, x: int, y: int) -> bool:
-        r = 7 - y
-        c = x + 7
+    def check_two_open3(self, x: int, y: int) -> bool:
+        r = self.board_len // 2 - y
+        c = x + self.board_len // 2
         
         if self.board_calc[r][c] in (0, 1):
             return False
@@ -198,13 +190,14 @@ class TwoOpen3Checker(BaseChecker):
         return self._check_open3_continuous_diagonal_downward(flipped, self.board_len - r - 1, c)
 
 
-class MoreThan6Checker(BaseChecker):
+class MoreThan6Checker:
     def __init__(self, board_calc: List[List[Union[int, None]]]) -> None:
-        super().__init__(board_calc)
+        self.board_len = 15
+        self.board_calc = board_calc
     
-    def check(self, x: int, y: int) -> bool:
-        r = 7 - y
-        c = x + 7
+    def check_more_than_6(self, x: int, y: int) -> bool:
+        r = self.board_len // 2 - y
+        c = x + self.board_len // 2
         
         if self.board_calc[r][c] in (0, 1):
             return False
@@ -254,3 +247,28 @@ class MoreThan6Checker(BaseChecker):
     def _check_6_diagonal_upward(self, board_calc, r, c) -> bool:
         flipped = np.flipud(board_calc)
         return self._check_6_diagonal_downward(flipped, self.board_len - r - 1, c)
+
+
+class RenjuChecker(Two4Checker, TwoOpen3Checker, MoreThan6Checker):
+    def __init__(self, board_calc: List[List[Union[int, None]]]) -> None:
+        super().__init__(board_calc)
+        super().__init__(board_calc)
+        super().__init__(board_calc)
+        self.board_len = 15
+        self.board_calc = board_calc
+    
+    def check(self, x: int, y: int) -> bool:
+        r = self.board_len // 2 - y
+        c = x + self.board_len // 2
+        
+        if self.board_calc[r][c] in (0, 1):
+            return False
+        
+        results = dict()
+        for forbid_type in ["two_4", "two_open3", "more_than_6"]:
+            results[forbid_type] = getattr(self, f"check_{forbid_type}")(x, y)
+        
+        if sum(results.values()) >= 1:
+            return True
+        else:
+            return False
